@@ -17,25 +17,41 @@ class GameViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var userGuessField: UITextField!
     
+    @IBOutlet weak var gameImage: UIImageView!
+
+    
+    var alert = UIAlertController(title: "Alert", message: "message", preferredStyle: UIAlertControllerStyle.Alert)
 
     
     var incorrectGuesses = ""
     var phrase = ""
-    var phraseCount = 0
+    var phraseCount = 0 //num characters of phrase including spaces
     var displayText = ""
     var mod_phrase = ""
     var mod_phraseCount = 0
+    var numCorrect = 0
+    var numWrong = 0
+    var numPhraseChars = 0 // num characters of phrase WITHOUT spaces
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
         
+        
+        alert = UIAlertController(title: "Alert", message: "message", preferredStyle: UIAlertControllerStyle.Alert)
+        
         self.userGuessField.delegate = self;
         
         let hangmanPhrases = HangmanPhrases()
         phrase = hangmanPhrases.getRandomPhrase().lowercaseString
+        phrase = "abbc"
         print(phrase)
+        var spacelessPhrase = phrase.stringByReplacingOccurrencesOfString(" ", withString: "")
+        numPhraseChars = spacelessPhrase.characters.count
+        print("number of characters in spaceless phrase")
+        print(String(numPhraseChars))
 
 //        phrase = "words of love" //hardcode for now
         
@@ -47,7 +63,7 @@ class GameViewController: UIViewController, UITextFieldDelegate {
         
         var numLetters = 0
         
-        print(String(phraseCount))
+
         
         for var i = 0; i < phraseCount; i+=1 {
             var end = i + 1
@@ -104,6 +120,8 @@ class GameViewController: UIViewController, UITextFieldDelegate {
         
         displayLabel.text = displayText;
         
+        // display gameImage: default is hangman1.gif
+        gameImage.image = UIImage(named: "hangman1.gif")
         
         
     }
@@ -142,17 +160,20 @@ class GameViewController: UIViewController, UITextFieldDelegate {
      Each tap of this button will remove an "_" from the puzzle label
     */
     @IBAction func correctGuess(sender: AnyObject) {
+
+
         let userGuess = userGuessField.text?.lowercaseString.substringWithRange(Range<String.Index>(start: phrase.startIndex, end: phrase.startIndex.advancedBy(1)))
 
-//        print("userGuessChar is: ")
-//        print(userGuessChar)
+        // if user submitted more than 1 letter, alert
+        if userGuess?.characters.count != 1 || userGuess?.characters.count == 0 {
+            // show UIAlert
+            print("user tried to submit 0 or more than 1 letter!")
+            return
+        }
 
-//        var end = i + 1
-//        var c = phrase.substringWithRange(Range<String.Index>(start: phrase.startIndex.advancedBy(i), end: phrase.startIndex.advancedBy(end)))
-
-        // user guess could be right
+        // user guessed correctly
         if phrase.rangeOfString(userGuess!) != nil {
-            //can only submit 1 LETTER
+            
             
             let userGuessChar: Character = userGuess![(userGuess?.startIndex)!]
             print("right guess!")
@@ -170,21 +191,108 @@ class GameViewController: UIViewController, UITextFieldDelegate {
                 if mod_phraseChars[i] == " " || mod_phraseChars[i] == "\n" {
                     continue
                 }
-                if mod_phraseChars[i] == userGuessChar {
+                if mod_phraseChars[i] == userGuessChar { // user guesses correctly, updating display
                     displayChars[i] = userGuessChar
+                    numCorrect += 1
                 }
             }
             
             displayText = String(displayChars)
             displayLabel.text = displayText
+            //check game state
+//            if checkGameState() {
+//                print ("Game ended!")
+//                return
+//            }
+            
         } else {
             print("wrong guess!")
             if !incorrectGuesses.containsString(userGuess!) {
                 incorrectGuesses = incorrectGuesses + userGuess! + " "
                 wrongGuessLabel.text = incorrectGuesses
+                numWrong += 1
+                
+                //display Image depending on how many incorrect guesses
+                
+                
+                
             }
         }
+        if checkGameState() {
+            print ("Game ended!")
+            return
+        }
         
+    }
+    
+    // return true for end game. False for keep going.
+    func checkGameState() -> Bool {
+        //Check for win
+        if numCorrect == numPhraseChars {
+
+            alert.addAction(UIAlertAction(title: "You won!", style: UIAlertActionStyle.Default, handler: nil))
+            alert.message = "You should feel good about yourself."
+            self.presentViewController(alert, animated: true, completion: nil)
+
+
+            
+            
+            
+            print("you win!")
+            return true
+        }
+        
+        switch numWrong {
+            case 1 :
+                gameImage.image = UIImage(named: "hangman2.gif")
+            case 2 :
+                gameImage.image = UIImage(named: "hangman3.gif")
+            case 3 :
+                gameImage.image = UIImage(named: "hangman4.gif")
+            case 4 :
+                gameImage.image = UIImage(named: "hangman5.gif")
+            case 5 :
+                gameImage.image = UIImage(named: "hangman6.gif")
+            case 6:
+                gameImage.image = UIImage(named: "hangman7.gif")
+            default:
+                break
+        }
+        
+        
+        if numWrong == 6 {
+            
+            alert.addAction(UIAlertAction(title: "You lost!", style: UIAlertActionStyle.Default, handler: nil))
+            alert.message = "Don't be down. This happens. Rarely."
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+            print("You've lost the game")
+            return true
+        }
+        
+        return false
+    }
+    
+    
+    @IBAction func startOver(sender: AnyObject) {
+        incorrectGuesses = ""
+        phrase = ""
+        phraseCount = 0 //num characters of phrase including spaces
+        displayText = ""
+        mod_phrase = ""
+        mod_phraseCount = 0
+        numCorrect = 0
+        numWrong = 0
+        numPhraseChars = 0 // num characters of phrase WITHOUT spaces
+        
+//        @IBOutlet weak var displayLabel: UILabel!
+//        @IBOutlet weak var wrongGuessLabel: UILabel!
+//        
+//        @IBOutlet weak var userGuessField: UITextField!
+//        
+//        @IBOutlet weak var gameImage: UIImageView!
+        
+        self.viewDidLoad()
     }
     
     
