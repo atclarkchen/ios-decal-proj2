@@ -43,10 +43,11 @@ class GameViewController: UIViewController, UITextFieldDelegate {
         alert = UIAlertController(title: "Alert", message: "message", preferredStyle: UIAlertControllerStyle.Alert)
         
         self.userGuessField.delegate = self;
+        userGuessField.text = ""
         
         let hangmanPhrases = HangmanPhrases()
         phrase = hangmanPhrases.getRandomPhrase().lowercaseString
-        phrase = "abbc"
+//        phrase = "abbc"
         print(phrase)
         var spacelessPhrase = phrase.stringByReplacingOccurrencesOfString(" ", withString: "")
         numPhraseChars = spacelessPhrase.characters.count
@@ -160,14 +161,40 @@ class GameViewController: UIViewController, UITextFieldDelegate {
      Each tap of this button will remove an "_" from the puzzle label
     */
     @IBAction func correctGuess(sender: AnyObject) {
+        let numChars = userGuessField.text?.characters.count
+        // if user did not submit exactly 1 character OR if character is " "
+        
+        
+        
+        let whitespace = NSCharacterSet.whitespaceCharacterSet()
+        let range = userGuessField.text!.rangeOfCharacterFromSet(whitespace)
+        
 
-
+        
+        var illegal_guess = false
+        if let is_white_space = range {
+            print("user tried to submit white space!")
+            illegal_guess = true
+        }
+        if numChars != 1 {
+            print("user tried to submit 0 or more than 1 letter!")
+            illegal_guess = true
+        }
+        
+        if illegal_guess {
+            alert.addAction(UIAlertAction(title: "Try another guess!", style: UIAlertActionStyle.Default, handler: nil))
+            alert.message = "You have to input exactly 1 character as a guess that is not a white space"
+            self.presentViewController(alert, animated: true, completion: nil)
+            
+            return
+        }
+        
         let userGuess = userGuessField.text?.lowercaseString.substringWithRange(Range<String.Index>(start: phrase.startIndex, end: phrase.startIndex.advancedBy(1)))
 
         // if user submitted more than 1 letter, alert
         if userGuess?.characters.count != 1 || userGuess?.characters.count == 0 {
             // show UIAlert
-            print("user tried to submit 0 or more than 1 letter!")
+
             return
         }
 
